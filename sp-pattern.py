@@ -37,6 +37,15 @@ def PatternExtraction(inputFile, output_folder):
     print(str(match_count) + ' strored procedures')
 
 
+def process_extended_properties(line):
+    pattern = "^SP_ADDEXTENDEDPROPERTY[ ]+(.*)"
+    match = re.match(pattern, line.strip(), re.IGNORECASE)
+
+    if match:
+        return True
+    else:
+        return False
+
 def extract_procedure_code_block(input_file_object):
     code_block = []
 
@@ -45,7 +54,10 @@ def extract_procedure_code_block(input_file_object):
     last_position = input_file_object.tell()
     current_line = input_file_object.readline()
     current_line_index += 1
+    at_extended_properties = False
     while current_line:
+        at_extended_properties = at_extended_properties or process_extended_properties(current_line)
+
         create_proc_pattern = "^create[ \t]+procedure.*(proc_[a-zA-Z0-9_]+)[ ]*{?.*"
         match_proc_pattern = re.match(create_proc_pattern, current_line.strip(), re.IGNORECASE)
         if match_proc_pattern or not current_line:
@@ -53,7 +65,17 @@ def extract_procedure_code_block(input_file_object):
             input_file_object.seek(last_position)
             return code_block
         else:
-            code_block.append(current_line)
+            if at_extended_properties:
+                pattern = "^GO$"
+                go_match = re.match(pattern, current_line.strip(), re.IGNORECASE)
+                if process_extended_properties(current_line) or go_match:
+                    code_block.append(current_line)
+                else:
+                    current_line_index -= 1
+                    input_file_object.seek(last_position)
+                    return code_block
+            else:
+                code_block.append(current_line)
         
         last_position = input_file_object.tell()
         current_line = input_file_object.readline()
