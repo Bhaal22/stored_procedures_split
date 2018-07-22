@@ -1,6 +1,7 @@
 import sys
 import os
 import re
+from jinja2 import Template
 
 current_line_index = 1
 
@@ -92,11 +93,13 @@ def generate_stored_procedure_into_file(stored_procedure_name, procedure_code_bl
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
 
-
-    stored_procedure_file = open(os.path.join(output_folder, 'dbo.' + stored_procedure_name + '.sql'), 'w')
     content = ''.join(procedure_code_block)
+    with open('sp_template') as template_file:
+        template = Template(template_file.read())
 
-    stored_procedure_file.write(content)
+        sp_full_content = template.render(procedure_name=stored_procedure_name, procedure_code_block=content)
+        stored_procedure_file = open(os.path.join(output_folder, 'dbo.' + stored_procedure_name + '.sql'), 'w')
+        stored_procedure_file.write(sp_full_content)
 
 def append_extended_properties_to_file(stored_procedure, output_folder, extended_properties):
     stored_procedure_file = open(os.path.join(output_folder, 'dbo.' + stored_procedure + '.sql'), 'a')
