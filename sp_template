@@ -3,8 +3,8 @@ GO
 SET ANSI_NULLS ON
 GO
 
-if exists (select * from dbo.sysobjects where id = object_id(N'[dbo].[{{ procedure_name }}]') and OBJECTPROPERTY(id, N'IsProcedure') = 1)
-    drop procedure [dbo].[{{ procedure_name }}]
+IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[{{ procedure_name }}]') AND OBJECTPROPERTY(id, N'IsProcedure') = 1)
+    DROP PROCEDURE [dbo].[{{ procedure_name }}]
 GO
 
 {{ procedure_code_block }}
