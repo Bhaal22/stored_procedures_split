@@ -12,6 +12,7 @@ def PatternExtraction(inputFile, output_folder):
     global current_line_index
 
     current_line = input_file_object.readline()
+    stored_procedures = []
     while current_line:
 
         pattern = "^create[ \t]+procedure.*(proc_[a-zA-Z0-9_]+)[ ]*{?.*"
@@ -20,8 +21,8 @@ def PatternExtraction(inputFile, output_folder):
             match_count += 1
 
             stored_procedure = match.groups()[0]
-            #print(str(current_line_index) + ' ' + stored_procedure)
             print(stored_procedure)
+            stored_procedures.append(stored_procedure)
 
             procedure_code_block = []
             procedure_code_block = extract_procedure_code_block(input_file_object)
@@ -29,11 +30,11 @@ def PatternExtraction(inputFile, output_folder):
             procedure_code_block.insert(0, current_line)
 
             generate_stored_procedure_into_file(stored_procedure, procedure_code_block, output_folder)
-            #append_extended_properties_to_file(stored_procedure, output_folder, extended_properties)
 
         current_line = input_file_object.readline()
         current_line_index += 1
 
+    generate_sp_list(os.path.basename(inputFile), stored_procedures, output_folder)
     print(str(match_count) + ' strored procedures')
 
 
@@ -122,6 +123,17 @@ def generate_stored_procedure_into_file(stored_procedure_name, procedure_code_bl
         sp_full_content = template.render(procedure_name=stored_procedure_name, procedure_code_block=content)
         stored_procedure_file = open(os.path.join(output_folder, 'dbo.' + stored_procedure_name + '.sql'), 'w')
         stored_procedure_file.write(sp_full_content)
+
+def generate_sp_list(input_file, stored_procedures, output_folder):
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+
+    with open('sp_list_template') as template_file:
+        template = Template(template_file.read())
+
+        sp_list_full_content = template.render(input_file=input_file, store_procedure_names=stored_procedures)
+        sp_list_file = open(os.path.join(output_folder, 'sp_list.sql'), 'w')
+        sp_list_file.write(sp_list_full_content)
 
 def append_extended_properties_to_file(stored_procedure, output_folder, extended_properties):
     stored_procedure_file = open(os.path.join(output_folder, 'dbo.' + stored_procedure + '.sql'), 'a')

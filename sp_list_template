@@ -1,0 +1,4 @@
+--- Has been generated initially from order from {{ input_file }} file
+
+{% for store_procedure_name in store_procedure_names %}
+:r dbo.{{ store_procedure_name }}.sql{% endfor %}
